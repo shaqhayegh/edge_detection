@@ -75,7 +75,9 @@ class ScanPhotoViewController: UIViewController, ImageScannerControllerDelegate,
         scanner.dismiss(animated: true)
         
         
-        saveImage(image:results.doesUserPreferEnhancedScan ? results.enhancedScan!.image : results.croppedScan.image)
+let enhancedScanImage = results.enhancedScan!.image
+        // saveImage(image:results.doesUserPreferEnhancedScan ? results.enhancedScan!.image : results.croppedScan.image)
+        saveImage(image:enhancedScanImage)
         _result!(true)
         self.dismiss(animated: true)
     }

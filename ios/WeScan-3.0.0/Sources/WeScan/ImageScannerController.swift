@@ -201,7 +201,7 @@ public struct ImageScannerResults {
         originalScan: ImageScannerScan,
         croppedScan: ImageScannerScan,
         enhancedScan: ImageScannerScan?,
-        doesUserPreferEnhancedScan: Bool = false
+        doesUserPreferEnhancedScan: Bool = true
     ) {
         self.detectedRectangle = detectedRectangle
 

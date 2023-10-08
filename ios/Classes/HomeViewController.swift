@@ -1,186 +1,181 @@
-//
-//  ViewController.swift
-//  WeScanSampleProject
-//
-//  Created by Boris Emorine on 2/8/18.
-//  Copyright © 2018 WeTransfer. All rights reserved.
-//
-
-import UIKit
 import WeScan
+import Flutter
+import Foundation
 
-final class HomeViewController: UIViewController {
+class HomeViewController: UIViewController, ImageScannerControllerDelegate {
 
-    private lazy var logoImageView: UIImageView = {
-        let image = #imageLiteral(resourceName: "WeScanLogo")
-        let imageView = UIImageView(image: image)
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
-    }()
+    var cameraController: ImageScannerController!
+    var _result:FlutterResult?
+    
+    var saveTo: String = ""
+    var canUseGallery: Bool = true
+    
+    override func viewDidAppear(_ animated: Bool) {
+        if self.isBeingPresented {
+            cameraController = ImageScannerController()
+            cameraController.imageScannerDelegate = self
 
-    private lazy var logoLabel: UILabel = {
-        let label = UILabel()
-        label.text = "WeScan"
-        label.font = UIFont.systemFont(ofSize: 25.0, weight: .bold)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-
-    private lazy var scanButton: UIButton = {
-        let button = UIButton(type: .custom)
-        button.titleLabel?.font = UIFont.preferredFont(forTextStyle: .headline)
-        button.setTitle("Scan Item", for: .normal)
+            if #available(iOS 13.0, *) {
+                cameraController.isModalInPresentation = true
+                cameraController.overrideUserInterfaceStyle = .dark
+                cameraController.view.backgroundColor = .black
+            }
+            
+            // Temp fix for https://github.com/WeTransfer/WeScan/issues/320
+            if #available(iOS 15, *) {
+                let appearance = UINavigationBarAppearance()
+                let navigationBar = UINavigationBar()
+                appearance.configureWithOpaqueBackground()
+                appearance.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.label]
+                appearance.backgroundColor = .systemBackground
+                navigationBar.standardAppearance = appearance;
+                UINavigationBar.appearance().scrollEdgeAppearance = appearance
+                
+                let appearanceTB = UITabBarAppearance()
+                appearanceTB.configureWithOpaqueBackground()
+                appearanceTB.backgroundColor = .systemBackground
+                UITabBar.appearance().standardAppearance = appearanceTB
+                UITabBar.appearance().scrollEdgeAppearance = appearanceTB
+            }
+            
+            present(cameraController, animated: true) {
+                if let window = UIApplication.shared.keyWindow {
+                    window.addSubview(self.selectPhotoButton)
+                    self.setupConstraints()
+                }
+            }
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        if (canUseGallery == true) {
+            selectPhotoButton.isHidden = false
+        }
+    }
+    
+    lazy var selectPhotoButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(named: "gallery", in: Bundle(for: SwiftEdgeDetectionPlugin.self), compatibleWith: nil)?.withRenderingMode(.alwaysTemplate), for: .normal)
+        button.tintColor = UIColor.white
+        button.addTarget(self, action: #selector(selectPhoto), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(scanOrSelectImage(_:)), for: .touchUpInside)
-        button.backgroundColor = UIColor(red: 64.0 / 255.0, green: 159 / 255.0, blue: 255 / 255.0, alpha: 1.0)
-        button.layer.cornerRadius = 10.0
+        button.isHidden = true
         return button
     }()
-
-    // MARK: - Life Cycle
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        setupViews()
-        setupConstraints()
+        
+    @objc private func cancelImageScannerController() {
+        hideButtons()
+        
+        _result!(false)
+        cameraController?.dismiss(animated: true)
+        dismiss(animated: true)
     }
-
-    // MARK: - Setups
-
-    private func setupViews() {
-        view.addSubview(logoImageView)
-        view.addSubview(logoLabel)
-        view.addSubview(scanButton)
+    
+    @objc func selectPhoto() {
+        if let window = UIApplication.shared.keyWindow {
+            window.rootViewController?.dismiss(animated: true, completion: nil)
+            self.hideButtons()
+            
+            let scanPhotoVC = ScanPhotoViewController()
+            scanPhotoVC._result = _result
+            scanPhotoVC.saveTo = self.saveTo
+            if #available(iOS 13.0, *) {
+                scanPhotoVC.isModalInPresentation = true
+                scanPhotoVC.overrideUserInterfaceStyle = .dark
+            }
+            window.rootViewController?.present(scanPhotoVC, animated: true)
+        }
     }
-
+    
+    func hideButtons() {
+        selectPhotoButton.isHidden = true
+    }
+    
     private func setupConstraints() {
-
-        let logoImageViewConstraints = [
-            logoImageView.widthAnchor.constraint(equalToConstant: 150.0),
-            logoImageView.heightAnchor.constraint(equalToConstant: 150.0),
-            logoImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            NSLayoutConstraint(
-                item: logoImageView,
-                attribute: .centerY,
-                relatedBy: .equal,
-                toItem: view,
-                attribute: .centerY,
-                multiplier: 0.75,
-                constant: 0.0
-            )
-        ]
-
-        let logoLabelConstraints = [
-            logoLabel.topAnchor.constraint(equalTo: logoImageView.bottomAnchor, constant: 20.0),
-            logoLabel.centerXAnchor.constraint(equalTo: logoImageView.centerXAnchor)
-        ]
-
-        NSLayoutConstraint.activate(logoLabelConstraints + logoImageViewConstraints)
-
+        var selectPhotoButtonConstraints = [NSLayoutConstraint]()
+        
         if #available(iOS 11.0, *) {
-            let scanButtonConstraints = [
-                scanButton.leftAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leftAnchor, constant: 16),
-                scanButton.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -16),
-                scanButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-                scanButton.heightAnchor.constraint(equalToConstant: 55)
+            selectPhotoButtonConstraints = [
+                selectPhotoButton.widthAnchor.constraint(equalToConstant: 44.0),
+                selectPhotoButton.heightAnchor.constraint(equalToConstant: 44.0),
+                selectPhotoButton.rightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.rightAnchor, constant: -24.0),
+                view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: selectPhotoButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
             ]
-
-            NSLayoutConstraint.activate(scanButtonConstraints)
         } else {
-            let scanButtonConstraints = [
-                scanButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 16),
-                scanButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -16),
-                scanButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16),
-                scanButton.heightAnchor.constraint(equalToConstant: 55)
+            selectPhotoButtonConstraints = [
+                selectPhotoButton.widthAnchor.constraint(equalToConstant: 44.0),
+                selectPhotoButton.heightAnchor.constraint(equalToConstant: 44.0),
+                selectPhotoButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -24.0),
+                view.bottomAnchor.constraint(equalTo: selectPhotoButton.bottomAnchor, constant: (65.0 / 2) - 10.0)
             ]
-
-            NSLayoutConstraint.activate(scanButtonConstraints)
         }
+        NSLayoutConstraint.activate(selectPhotoButtonConstraints)
     }
-
-    // MARK: - Actions
-
-    @objc func scanOrSelectImage(_ sender: UIButton) {
-        let actionSheet = UIAlertController(
-            title: "Would you like to scan an image or select one from your photo library?",
-            message: nil,
-            preferredStyle: .actionSheet
-        )
-
-        let newAction = UIAlertAction(title: "A new scan", style: .default) { _ in
-            guard let controller = self.storyboard?.instantiateViewController(withIdentifier: "NewCameraViewController") else { return }
-            controller.modalPresentationStyle = .fullScreen
-            self.present(controller, animated: true, completion: nil)
-        }
-
-        let scanAction = UIAlertAction(title: "Scan", style: .default) { _ in
-            self.scanImage()
-        }
-
-        let selectAction = UIAlertAction(title: "Select", style: .default) { _ in
-            self.selectImage()
-        }
-
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-
-        actionSheet.addAction(scanAction)
-        actionSheet.addAction(selectAction)
-        actionSheet.addAction(cancelAction)
-        actionSheet.addAction(newAction)
-
-        present(actionSheet, animated: true)
+    
+    func setParams(saveTo: String, canUseGallery: Bool) {
+        self.saveTo = saveTo
+        self.canUseGallery = canUseGallery
     }
-
-    func scanImage() {
-        let scannerViewController = ImageScannerController(delegate: self)
-        scannerViewController.modalPresentationStyle = .fullScreen
-
-        if #available(iOS 13.0, *) {
-            scannerViewController.navigationBar.tintColor = .label
-        } else {
-            scannerViewController.navigationBar.tintColor = .black
-        }
-
-        present(scannerViewController, animated: true)
-    }
-
-    func selectImage() {
-        let imagePicker = UIImagePickerController()
-        imagePicker.delegate = self
-        imagePicker.sourceType = .photoLibrary
-        present(imagePicker, animated: true)
-    }
-
-}
-
-extension HomeViewController: ImageScannerControllerDelegate {
+    
     func imageScannerController(_ scanner: ImageScannerController, didFailWithError error: Error) {
-        assertionFailure("Error occurred: \(error)")
+        print(error)
+        _result!(false)
+        self.hideButtons()
+        self.dismiss(animated: true)
     }
-
+    
     func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: ImageScannerResults) {
-        scanner.dismiss(animated: true, completion: nil)
+        // Your ViewController is responsible for dismissing the ImageScannerController
+        scanner.dismiss(animated: true)
+        self.hideButtons()
+        
+        saveImage(image:results.doesUserPreferEnhancedScan ? results.enhancedScan!.image : results.croppedScan.image)
+        _result!(true)
+        self.dismiss(animated: true)
     }
-
+    
     func imageScannerControllerDidCancel(_ scanner: ImageScannerController) {
-        scanner.dismiss(animated: true, completion: nil)
+        // Your ViewController is responsible for dismissing the ImageScannerController
+        scanner.dismiss(animated: true)
+        self.hideButtons()
+        
+        _result!(false)
+        self.dismiss(animated: true)
     }
-
+    
+    func saveImage(image: UIImage) -> Bool? {
+        
+        guard let data = image.jpegData(compressionQuality: 1) ?? image.pngData() else {
+            return false
+        }
+        
+        let path : String = "file://" + self.saveTo.addingPercentEncoding(withAllowedCharacters:NSCharacterSet.urlQueryAllowed)!
+        let filePath: URL = URL.init(string: path)!
+        
+        do {
+            let fileManager = FileManager.default
+            // Check if file exists
+            if fileManager.fileExists(atPath: filePath.path) {
+                // Delete file
+                try fileManager.removeItem(atPath: filePath.path)
+            }
+            else {
+                print("File does not exist")
+            }
+        }
+        catch let error as NSError {
+            print("An error took place: \(error)")
+        }
+        
+        do {
+            try data.write(to: filePath)
+            return true
+        }
+        
+        catch {
+            print(error.localizedDescription)
+            return false
+        }
+    }
 }
 
-extension HomeViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true)
-    }
-
-    func imagePickerController(_ picker: UIImagePickerController,
-                               didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        picker.dismiss(animated: true)
-
-        guard let image = info[.originalImage] as? UIImage else { return }
-        let scannerViewController = ImageScannerController(image: image, delegate: self)
-        present(scannerViewController, animated: true)
-    }
-}
