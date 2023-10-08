@@ -30,28 +30,47 @@ final class EditScanViewController: UIViewController {
         return quadView
     }()
 
-    private lazy var nextButton: UIBarButtonItem = {
+    private lazy var nextButton: UIButton = {
         let title = NSLocalizedString("wescan.edit.button.next",
                                       tableName: nil,
                                       bundle: Bundle(for: EditScanViewController.self),
                                       value: "Next",
                                       comment: "A generic next button"
         )
-        let button = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(pushReviewController))
-        button.tintColor = navigationController?.navigationBar.tintColor
-        return button
+        let nextButton = UIButton()
+        nextButton.translatesAutoresizingMaskIntoConstraints = false
+        nextButton.setTitle(title, for: .normal)
+        nextButton.layer.cornerRadius = 20
+        nextButton.backgroundColor = .blue
+        nextButton.setTitleColor(.white, for: .normal)
+        nextButton.addTarget(self, action: #selector(pushReviewController), for: .touchUpInside)
+        return nextButton
     }()
 
-    private lazy var cancelButton: UIBarButtonItem = {
+    private lazy var cancelButton: UIButton = {
         let title = NSLocalizedString("wescan.scanning.cancel",
                                       tableName: nil,
                                       bundle: Bundle(for: EditScanViewController.self),
                                       value: "Cancel",
                                       comment: "A generic cancel button"
         )
-        let button = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(cancelButtonTapped))
-        button.tintColor = navigationController?.navigationBar.tintColor
-        return button
+        let cancelButton = UIButton()
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        cancelButton.setTitle(title, for: .normal)
+        cancelButton.layer.cornerRadius = 20
+        cancelButton.layer.borderColor = UIColor.blue.cgColor
+        cancelButton.layer.borderWidth = 1.0
+        cancelButton.setTitleColor(.blue, for: .normal)
+        cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
+        return cancelButton
+    }()
+    
+    private lazy var parentImageView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(imageView)
+        view.addSubview(quadView)
+        return view
     }()
 
     /// The image the quadrilateral was detected on.
@@ -61,7 +80,7 @@ final class EditScanViewController: UIViewController {
     private var quad: Quadrilateral
 
     private var zoomGestureController: ZoomGestureController!
-
+    
     private var quadViewWidthConstraint = NSLayoutConstraint()
     private var quadViewHeightConstraint = NSLayoutConstraint()
 
@@ -88,18 +107,12 @@ final class EditScanViewController: UIViewController {
                                   value: "Edit Scan",
                                   comment: "The title of the EditScanViewController"
         )
-        navigationItem.rightBarButtonItem = nextButton
-        if let firstVC = self.navigationController?.viewControllers.first, firstVC == self {
-            navigationItem.leftBarButtonItem = cancelButton
-        } else {
-            navigationItem.leftBarButtonItem = nil
-        }
 
         zoomGestureController = ZoomGestureController(image: image, quadView: quadView)
 
         let touchDown = UILongPressGestureRecognizer(target: zoomGestureController, action: #selector(zoomGestureController.handle(pan:)))
         touchDown.minimumPressDuration = 0
-        view.addGestureRecognizer(touchDown)
+        parentImageView.addGestureRecognizer(touchDown)
     }
 
     override public func viewDidLayoutSubviews() {
@@ -119,29 +132,52 @@ final class EditScanViewController: UIViewController {
     // MARK: - Setups
 
     private func setupViews() {
-        view.addSubview(imageView)
-        view.addSubview(quadView)
+        view.addSubview(parentImageView)
+        view.addSubview(cancelButton)
+        view.addSubview(nextButton)
     }
 
     private func setupConstraints() {
+        let parentImageConstraints = [
+            parentImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            parentImageView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            parentImageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ]
+        
         let imageViewConstraints = [
-            imageView.topAnchor.constraint(equalTo: view.topAnchor),
-            imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            view.bottomAnchor.constraint(equalTo: imageView.bottomAnchor),
-            view.leadingAnchor.constraint(equalTo: imageView.leadingAnchor)
+            imageView.topAnchor.constraint(equalTo: parentImageView.topAnchor),
+            imageView.leadingAnchor.constraint(equalTo: parentImageView.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: parentImageView.trailingAnchor),
+            imageView.bottomAnchor.constraint(equalTo: parentImageView.bottomAnchor)
         ]
 
         quadViewWidthConstraint = quadView.widthAnchor.constraint(equalToConstant: 0.0)
         quadViewHeightConstraint = quadView.heightAnchor.constraint(equalToConstant: 0.0)
 
         let quadViewConstraints = [
-            quadView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            quadView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            quadView.centerXAnchor.constraint(equalTo: parentImageView.centerXAnchor),
+            quadView.centerYAnchor.constraint(equalTo: parentImageView.centerYAnchor),
             quadViewWidthConstraint,
             quadViewHeightConstraint
         ]
+        
+        let cancelButtonConstriant = [
+         cancelButton.heightAnchor.constraint(equalToConstant: 50),
+         cancelButton.topAnchor.constraint(equalTo: parentImageView.bottomAnchor, constant: 40),
+         cancelButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+         cancelButton.leadingAnchor.constraint(equalTo: parentImageView.leadingAnchor),
+         cancelButton.widthAnchor.constraint(equalTo: parentImageView.widthAnchor, multiplier: 0.45)
+        ]
+        
+        let nextButtonConstriant = [
+         nextButton.heightAnchor.constraint(equalToConstant: 50),
+         nextButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 40),
+         nextButton.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+         nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+         nextButton.widthAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 0.45),
+        ]
 
-        NSLayoutConstraint.activate(quadViewConstraints + imageViewConstraints)
+        NSLayoutConstraint.activate(quadViewConstraints + imageViewConstraints + parentImageConstraints + cancelButtonConstriant + nextButtonConstriant)
     }
 
     // MARK: - Actions
