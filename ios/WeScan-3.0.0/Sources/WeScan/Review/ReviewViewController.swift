@@ -46,11 +46,34 @@ final class ReviewViewController: UIViewController {
         return button
     }()
 
-    private lazy var doneButton: UIBarButtonItem = {
-        let button = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(finishScan))
-        button.tintColor = navigationController?.navigationBar.tintColor
-        return button
+    private lazy var doneButton: UIButton = {
+        let title = "done"
+        let doneButton = UIButton()
+        doneButton.translatesAutoresizingMaskIntoConstraints = false
+        doneButton.setTitle(title, for: .normal)
+        doneButton.layer.cornerRadius = 20
+        let buttonColor = UIColor(red: 46/255.0, green: 101/255.0, blue: 183/255.0, alpha: 1.0)
+        doneButton.backgroundColor = buttonColor
+        doneButton.setTitleColor(.white, for: .normal)
+        doneButton.addTarget(self, action: #selector(finishScan), for: .touchUpInside)
+        return doneButton
     }()
+
+    private lazy var parentImageView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(imageView)
+        return view
+    }()
+
+
+    // private lazy var doneButton: UIBarButtonItem = {
+    //     let button = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(finishScan))
+    //     button.tintColor = navigationController?.navigationBar.tintColor
+    //     return button
+    // }()
+
+    
 
     private let results: ImageScannerResults
 
@@ -70,7 +93,7 @@ final class ReviewViewController: UIViewController {
 
         enhancedImageIsAvailable = results.enhancedScan != nil
         setupViews()
-        setupToolbar()
+        // setupToolbar()
         setupConstraints()
 
         title = NSLocalizedString("wescan.review.title",
@@ -79,27 +102,30 @@ final class ReviewViewController: UIViewController {
                                   value: "Review",
                                   comment: "The review title of the ReviewController"
         )
-        navigationItem.rightBarButtonItem = doneButton
+        // navigationItem.rightBarButtonItem = doneButton
     }
 
     override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+        // super.viewWillAppear(animated)
 
         // We only show the toolbar (with the enhance button) if the enhanced image is available.
-        if enhancedImageIsAvailable {
-            navigationController?.setToolbarHidden(false, animated: true)
-        }
+        // if enhancedImageIsAvailable {
+        //     navigationController?.setToolbarHidden(false, animated: true)
+        // }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        navigationController?.setToolbarHidden(true, animated: true)
+        // super.viewWillDisappear(animated)
+        // navigationController?.setToolbarHidden(true, animated: true)
     }
 
     // MARK: Setups
 
     private func setupViews() {
+        view.addSubview(parentImageView)
         view.addSubview(imageView)
+         view.addSubview(doneButton)
+
     }
 
     private func setupToolbar() {
@@ -115,6 +141,12 @@ final class ReviewViewController: UIViewController {
     private func setupConstraints() {
         imageView.translatesAutoresizingMaskIntoConstraints = false
 
+
+            let parentImageConstraints = [
+            parentImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40),
+            parentImageView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            parentImageView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20)
+        ]
         var imageViewConstraints: [NSLayoutConstraint] = []
         if #available(iOS 11.0, *) {
             imageViewConstraints = [
@@ -123,6 +155,10 @@ final class ReviewViewController: UIViewController {
                 view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.bottomAnchor),
                 view.safeAreaLayoutGuide.leadingAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.leadingAnchor)
             ]
+
+
+         
+            
         } else {
             imageViewConstraints = [
                 view.topAnchor.constraint(equalTo: imageView.topAnchor),
@@ -130,9 +166,17 @@ final class ReviewViewController: UIViewController {
                 view.bottomAnchor.constraint(equalTo: imageView.bottomAnchor),
                 view.leadingAnchor.constraint(equalTo: imageView.leadingAnchor)
             ]
-        }
 
-        NSLayoutConstraint.activate(imageViewConstraints)
+        }
+    let doneButtonConstraints = [
+    doneButton.heightAnchor.constraint(equalToConstant: 50),
+    doneButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -15),
+    doneButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+    doneButton.widthAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 0.45),
+    ]
+
+
+        NSLayoutConstraint.activate(imageViewConstraints + doneButtonConstraints + parentImageConstraints)
     }
 
     // MARK: - Actions

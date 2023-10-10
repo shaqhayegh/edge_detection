@@ -41,7 +41,8 @@ final class EditScanViewController: UIViewController {
         nextButton.translatesAutoresizingMaskIntoConstraints = false
         nextButton.setTitle(title, for: .normal)
         nextButton.layer.cornerRadius = 20
-        nextButton.backgroundColor = .blue
+        let buttonColor = UIColor(red: 46/255.0, green: 101/255.0, blue: 183/255.0, alpha: 1.0)
+        nextButton.backgroundColor = buttonColor
         nextButton.setTitleColor(.white, for: .normal)
         nextButton.addTarget(self, action: #selector(pushReviewController), for: .touchUpInside)
         return nextButton
@@ -58,9 +59,12 @@ final class EditScanViewController: UIViewController {
         cancelButton.translatesAutoresizingMaskIntoConstraints = false
         cancelButton.setTitle(title, for: .normal)
         cancelButton.layer.cornerRadius = 20
-        cancelButton.layer.borderColor = UIColor.blue.cgColor
-        cancelButton.layer.borderWidth = 1.0
-        cancelButton.setTitleColor(.blue, for: .normal)
+        let buttonColor = UIColor(red: 46/255.0, green: 101/255.0, blue: 183/255.0, alpha: 1.0)
+        let borderColor = buttonColor.cgColor
+        cancelButton.layer.borderColor = borderColor
+        cancelButton.layer.borderWidth = 1.8
+        cancelButton.backgroundColor = .white
+        cancelButton.setTitleColor(buttonColor, for: .normal)
         cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
         return cancelButton
     }()

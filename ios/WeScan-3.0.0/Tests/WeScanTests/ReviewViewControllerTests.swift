@@ -85,7 +85,7 @@ final class ReviewViewControllerTests: XCTestCase {
     }
 
     func testImageIsCorrectlyRotated360() {
-        let results = ImageScannerResults(detectedRectangle: demoQuad, originalScan: demoScan, croppedScan: demoScan, enhancedScan: demoScan, doesUserPreferEnhancedScan: false)
+        let results = ImageScannerResults(detectedRectangle: demoQuad, originalScan: demoScan, croppedScan: demoScan, enhancedScan: demoScan, : false)
         let vc = ReviewViewController(results: results)
         vc.viewDidLoad()
 
@@ -98,7 +98,7 @@ final class ReviewViewControllerTests: XCTestCase {
     }
 
     func testEnhancedImage() {
-        let results = ImageScannerResults(detectedRectangle: demoQuad, originalScan: demoScan, croppedScan: demoScan, enhancedScan: enhancedDemoScan, doesUserPreferEnhancedScan: false)
+        let results = ImageScannerResults(detectedRectangle: demoQuad, originalScan: demoScan, croppedScan: demoScan, enhancedScan: enhancedDemoScan, doesUserPreferEnhancedScan: true)
         let viewController = ReviewViewController(results: results)
         viewController.viewDidLoad()
 
