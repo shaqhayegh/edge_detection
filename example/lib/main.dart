@@ -17,6 +17,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String? _imagePath;
+  List<File> images = [];
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _MyAppState extends State<MyApp> {
     // Generate filepath for saving
     String imagePath = join((await getApplicationSupportDirectory()).path,
         "${(DateTime.now().millisecondsSinceEpoch / 1000).round()}.jpeg");
-      
+
     bool success = false;
 
     try {
@@ -62,8 +63,9 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      if(success){
-        _imagePath = imagePath;
+      if (success) {
+        // _imagePath = imagePath;
+        images.add(File(imagePath));
       }
     });
   }
@@ -93,8 +95,8 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      if(success){
-        _imagePath = imagePath;
+      if (success) {
+        images.add(File(imagePath));
       }
     });
   }
@@ -106,47 +108,91 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Center(
-                child: ElevatedButton(
-                  onPressed: getImageFromCamera,
-                  child: Text('Scan'),
-                ),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Center(
+              child: ElevatedButton(
+                onPressed: getImageFromCamera,
+                child: Text('Scan'),
               ),
-              SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: getImageFromGallery,
-                  child: Text('Upload'),
-                ),
+            ),
+            SizedBox(height: 20),
+            Center(
+              child: ElevatedButton(
+                onPressed: getImageFromGallery,
+                child: Text('Upload'),
               ),
-              SizedBox(height: 20),
-              Text('Cropped image path:'),
-              Padding(
-                padding: const EdgeInsets.only(top: 0, left: 0, right: 0),
-                child: Text(
-                  _imagePath.toString(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14),
-                ),
+            ),
+            SizedBox(height: 20),
+            Text('Cropped image path:'),
+            Padding(
+              padding: const EdgeInsets.only(top: 0, left: 0, right: 0),
+              child: Text(
+                _imagePath.toString(),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14),
               ),
-              Visibility(
-                visible: _imagePath != null,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.file(
-                    File(_imagePath ?? ''),
-                  ),
-                ),
+            ),
+            Visibility(
+              visible: images.isNotEmpty,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ImageReorderScreen(imageFiles: images),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+  }
+}
+
+class ImageReorderScreen extends StatefulWidget {
+  final List<File> imageFiles;
+
+  const ImageReorderScreen({Key? key, required this.imageFiles})
+      : super(key: key);
+  @override
+  _ImageReorderScreenState createState() => _ImageReorderScreenState();
+}
+
+class _ImageReorderScreenState extends State<ImageReorderScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      child: ReorderableListView(
+          onReorder: _onReorder,
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.all(6),
+          children: List.generate(
+              widget.imageFiles.length,
+              (index) => Row(
+                    key: Key(widget.imageFiles[index].path),
+                    children: [
+                      SizedBox(width: 8,),
+                      Image.file(
+                        widget.imageFiles[index],
+                        key: Key(widget.imageFiles[index]
+                            .path), // Unique key for each list item
+                        width: 200,
+                        height: 200,
+                      ),
+                    ],
+                  ))),
+    );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final image = widget.imageFiles.removeAt(oldIndex);
+      widget.imageFiles.insert(newIndex, image);
+      print(widget.imageFiles);
+    });
   }
 }
