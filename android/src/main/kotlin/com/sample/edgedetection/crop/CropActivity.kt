@@ -33,6 +33,8 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
         }
     }
 
+
+
     override fun provideContentViewId(): Int = R.layout.activity_crop
 
 
@@ -55,14 +57,14 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.crop_activity_menu, menu)
 
-        menu.setGroupVisible(R.id.enhance_group, showMenuItems)
+        //menu.setGroupVisible(R.id.enhance_group, showMenuItems)
 
         menu.findItem(R.id.rotation_image).isVisible = showMenuItems
 
-        menu.findItem(R.id.gray).title =
-            initialBundle.getString(EdgeDetectionHandler.CROP_BLACK_WHITE_TITLE) as String
-        menu.findItem(R.id.reset).title =
-            initialBundle.getString(EdgeDetectionHandler.CROP_RESET_TITLE) as String
+//        menu.findItem(R.id.gray).title =
+//            initialBundle.getString(EdgeDetectionHandler.CROP_BLACK_WHITE_TITLE) as String
+        //menu.findItem(R.id.reset).title =
+            //initialBundle.getString(EdgeDetectionHandler.CROP_RESET_TITLE) as String
 
         if (showMenuItems) {
             menu.findItem(R.id.action_label).isVisible = true
@@ -102,16 +104,15 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
                 mPresenter.rotate()
                 return true
             }
-            R.id.gray -> {
-                Log.e(TAG, "Black White touched!")
-                mPresenter.enhance()
-                return true
-            }
-            R.id.reset -> {
-                Log.e(TAG, "Reset touched!")
-                mPresenter.reset()
-                return true
-            }
+//            R.id.gray -> {
+//                Log.e(TAG, "Black White touched!")
+//                return true
+//            }
+//            R.id.reset -> {
+//                Log.e(TAG, "Reset touched!")
+//                mPresenter.reset()
+//                return true
+//            }
             else -> return super.onOptionsItemSelected(item)
         }
     }
