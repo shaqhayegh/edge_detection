@@ -1,4 +1,5 @@
 package com.sample.edgedetection.scan
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -273,6 +274,7 @@ class ScanPresenter constructor(
         }
     }
 
+    @SuppressLint("CheckResult")
     override fun onPictureTaken(p0: ByteArray?, p1: Camera?) {
         Log.i(TAG, "on picture taken")
         Observable.just(p0)
@@ -296,6 +298,7 @@ class ScanPresenter constructor(
             }
     }
 
+    @SuppressLint("CheckResult")
     override fun onPreviewFrame(p0: ByteArray?, p1: Camera?) {
         if (busy) {
             return

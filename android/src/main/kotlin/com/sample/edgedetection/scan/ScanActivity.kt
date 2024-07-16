@@ -54,9 +54,9 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
 
         // to hide the flashLight button from  SDK versions which we do not handle the permission for!
         findViewById<View>(R.id.flash).visibility = if
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && baseContext.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
+                                                            (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && baseContext.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
             View.VISIBLE else
-                View.GONE
+            View.GONE
 
         findViewById<View>(R.id.flash).setOnClickListener {
             mPresenter.toggleFlash()
@@ -69,9 +69,9 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
         }
 
         findViewById<View>(R.id.gallery).visibility =
-                if (initialBundle.getBoolean(EdgeDetectionHandler.CAN_USE_GALLERY, true))
-                    View.VISIBLE
-                else View.GONE
+            if (initialBundle.getBoolean(EdgeDetectionHandler.CAN_USE_GALLERY, true))
+                View.VISIBLE
+            else View.GONE
 
         findViewById<View>(R.id.gallery).setOnClickListener {
             pickupFromGallery()
@@ -134,7 +134,10 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     onImageSelected(uri)
                 }
-            } else {
+            }else if(resultCode == Activity.RESULT_CANCELED){
+                mPresenter.start()
+            }
+            else {
                 if (intent.hasExtra(EdgeDetectionHandler.FROM_GALLERY) && intent.getBooleanExtra(EdgeDetectionHandler.FROM_GALLERY,false))
                     finish()
             }
@@ -157,8 +160,8 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             val exif = ExifInterface(iStream)
             var rotation = -1
             val orientation: Int = exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_UNDEFINED
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED
             )
             when (orientation) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> rotation = Core.ROTATE_90_CLOCKWISE
