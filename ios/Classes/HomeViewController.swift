@@ -129,7 +129,7 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         scanner.dismiss(animated: true)
         self.hideButtons()
         
-        saveImage(image:results.enhancedScan!.image)
+        saveImage(image:results.doesUserPreferEnhancedScan ? results.enhancedScan!.image : results.croppedScan.image)
         _result!(true)
         self.dismiss(animated: true)
     }
@@ -178,4 +178,3 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         }
     }
 }
-
