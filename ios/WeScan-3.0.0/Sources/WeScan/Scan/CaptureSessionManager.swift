@@ -143,6 +143,7 @@ final class CaptureSessionManager: NSObject, AVCaptureVideoDataOutputSampleBuffe
         case .authorized:
             DispatchQueue.main.async {
                 self.captureSession.startRunning()
+                self.configureTorchMode(.on) // Ensure the torch is on
             }
             isDetecting = true
         case .notDetermined:
@@ -157,11 +158,31 @@ final class CaptureSessionManager: NSObject, AVCaptureVideoDataOutputSampleBuffe
         }
     }
 
-    internal func stop() {
-        captureSession.stopRunning()
+    
+    private func configureTorchMode(_ mode: AVCaptureDevice.TorchMode) {
+        guard let device = AVCaptureDevice.default(for: .video) else {
+            return
+        }
+        do {
+            try device.lockForConfiguration()
+            if device.isTorchAvailable {
+                device.torchMode = mode
+            }
+            device.unlockForConfiguration()
+        } catch {
+            print("Failed to configure torch mode: \(error)")
+        }
     }
 
-    internal func capturePhoto() {
+    
+    
+
+    internal func stop() {
+        captureSession.stopRunning()
+        configureTorchMode(.off) // Ensure the torch is off when stopping
+    }
+
+    func capturePhoto() {
         guard let connection = photoOutput.connection(with: .video), connection.isEnabled, connection.isActive else {
             let error = ImageScannerControllerError.capture
             delegate?.captureSessionManager(self, didFailWithError: error)
@@ -171,8 +192,10 @@ final class CaptureSessionManager: NSObject, AVCaptureVideoDataOutputSampleBuffe
         let photoSettings = AVCapturePhotoSettings()
         photoSettings.isHighResolutionPhotoEnabled = true
         photoSettings.isAutoStillImageStabilizationEnabled = true
+        configureTorchMode(.on) // Ensure the torch is on when capturing
         photoOutput.capturePhoto(with: photoSettings, delegate: self)
     }
+
 
     // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 
