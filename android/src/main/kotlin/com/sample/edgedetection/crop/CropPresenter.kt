@@ -67,7 +67,7 @@ class CropPresenter(
                 iCropView.getCroppedPaper().setImageBitmap(croppedBitmap)
                 iCropView.getPaper().visibility = View.GONE
                 iCropView.getPaperRect().visibility = View.GONE
-                enhance()
+               
             }
     }
 
