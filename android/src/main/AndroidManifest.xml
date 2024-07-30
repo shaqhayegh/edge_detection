@@ -9,6 +9,7 @@
         android:permissionGroup="android.permission-group.HARDWARE_CONTROLS"
         android:protectionLevel="normal"
         android:maxSdkVersion="30"/>
+        
 
     <application
         android:allowBackup="false"
