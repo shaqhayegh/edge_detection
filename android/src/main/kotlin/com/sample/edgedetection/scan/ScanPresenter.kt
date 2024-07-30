@@ -100,10 +100,15 @@ class ScanPresenter constructor(
 
         mCamera?.autoFocus { b, _ ->
             Log.i(TAG, "focus result: $b")
+
+            // Ensure flash is turned on
+            val parameters = mCamera?.parameters
+            parameters?.flashMode = Camera.Parameters.FLASH_MODE_TORCH
+            mCamera?.parameters = parameters
+
             mCamera?.enableShutterSound(false)
             mCamera?.takePicture(null, null, this)
         }
-
     }
 
     fun toggleFlash() {
@@ -153,7 +158,6 @@ class ScanPresenter constructor(
     }
 
     private fun initCamera() {
-
         try {
             mCamera = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK)
         } catch (e: RuntimeException) {
@@ -216,12 +220,14 @@ class ScanPresenter constructor(
             Log.i(TAG, "autofocus not available")
         }
 
-        param?.flashMode = Camera.Parameters.FLASH_MODE_OFF
+        // Always enable flash
+        param?.flashMode = Camera.Parameters.FLASH_MODE_TORCH
 
         mCamera?.parameters = param
         mCamera?.setDisplayOrientation(90)
         mCamera?.enableShutterSound(false)
     }
+
 
     private fun matrixResizer(sourceMatrix: Mat): Mat {
         val sourceSize: Size = sourceMatrix.size()
